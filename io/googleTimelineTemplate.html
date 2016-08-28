@@ -1,0 +1,35 @@
+﻿<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+<script type="text/javascript">
+
+  google.charts.load('current', {'packages':['timeline']});
+  google.charts.setOnLoadCallback(drawTimeline);
+
+  function drawTimeline() {
+
+	var pathname = "/Users/yngve/Dropbox/500water9bar_1of5_timeline.xml"
+    var chart = new google.visualization.Timeline(document.getElementById('chartBody'));
+  
+    var timeTable = new google.visualization.DataTable();
+
+    timeTable.addColumn({ type: 'string', id: 'Cycle' });
+    timeTable.addColumn({ type: 'string', id: 'Name' });
+    timeTable.addColumn({ type: 'date', id: 'Start' });
+    timeTable.addColumn({ type: 'date', id: 'End' });
+   
+    timeTable.addRows([
+    // <insertionpoint timelinecycles>
+
+	]);
+
+    var options = {
+      timeline: { showRowLabels: true, groupByRowLabel: true, colorByRowLabel: true, avoidOverlappingGridLines: false }
+    };
+
+    chart.draw(timeTable, options);
+  }
+  </script>
+
+  <body>
+ 	<div id="chartBody" style="height: 1000px; width: 10000px;"></div>
+  </body>
+

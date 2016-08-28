@@ -1,0 +1,7 @@
+/Users/yngve/Projects/BleedingSteel/BleedingSteel/obj/x86/Debug/.NETFramework,Version=v4.5.AssemblyAttribute.cs
+/Users/yngve/Projects/BleedingSteel/BleedingSteel/bin/Debug/BleedingSteel.exe.mdb
+/Users/yngve/Projects/BleedingSteel/BleedingSteel/bin/Debug/BleedingSteel.exe
+/Users/yngve/Projects/BleedingSteel/BleedingSteel/obj/x86/Debug/BleedingSteel.exe
+/Users/yngve/Projects/BleedingSteel/BleedingSteel/obj/x86/Debug/BleedingSteel.exe.mdb
+/Users/yngve/Projects/BleedingSteel/BleedingSteel/bin/Debug/ZedGraph.dll
+/Users/yngve/Projects/BleedingSteel/BleedingSteel/bin/Debug/io/googleTimelineTemplate.html
