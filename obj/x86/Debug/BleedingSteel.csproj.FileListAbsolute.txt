@@ -1,0 +1,6 @@
+C:\Users\Yngve\Documents\GitHub\BleedingSteel\obj\x86\Debug\BleedingSteel.exe
+C:\Users\Yngve\Documents\GitHub\BleedingSteel\bin\Debug\io\googleTimelineTemplate.html
+C:\Users\Yngve\Documents\GitHub\BleedingSteel\bin\Debug\BleedingSteel.exe
+C:\Users\Yngve\Documents\GitHub\BleedingSteel\bin\Debug\BleedingSteel.pdb
+C:\Users\Yngve\Documents\GitHub\BleedingSteel\obj\x86\Debug\BleedingSteel.csprojResolveAssemblyReference.cache
+C:\Users\Yngve\Documents\GitHub\BleedingSteel\obj\x86\Debug\BleedingSteel.pdb

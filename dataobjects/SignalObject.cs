@@ -56,7 +56,7 @@ namespace BleedingSteel
         }
 
         private double getDataFromLine(string line){
-            return float.Parse(line.Substring(line.IndexOf(',') + 1));
+            return float.Parse(line.Substring(line.IndexOf(',') + 1),CultureInfo.InvariantCulture);
         }
 
         private DateTime getTimestampFromLine(string line){

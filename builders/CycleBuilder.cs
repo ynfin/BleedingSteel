@@ -9,6 +9,8 @@ namespace BleedingSteel
         public Trigger deliverytrigger { get; private set; }
         public Trigger handlerdowntrigger { get; private set; }
         public Trigger materialchangetrigger { get; private set; }
+        public Trigger homepostrigger { get; private set; }
+        public Trigger Firsthomepostrigger { get; private set; }
 
         public Trigger clnifsToDeliveryTrigger { get; private set; }
         public Trigger fillcarttrigger { get; private set; }
@@ -19,7 +21,6 @@ namespace BleedingSteel
         public Trigger flushGateTrigger { get; private set; }
         public Trigger ftCleanTrigger { get; private set; }
 
-
         // cycles until delivery
         public List<Cycle> firstJobList { get; private set; }
         public List<Cycle> secondJobList { get; private set; }
@@ -28,6 +29,11 @@ namespace BleedingSteel
         public List<Cycle> handlerOutJobs { get; private set; }
         public List<Cycle> handlerDownJobs { get; private set; }
         public List<Cycle> materialChangeJobs { get; private set;}
+        public List<Cycle> homeposJobs { get; private set; }
+
+        public List<Cycle> GetCartJobs { get; private set; }
+        public List<Cycle> PlaceCartJobs { get; private set; }
+        public List<Cycle> homeToMcJobs { get; private set; }
 
         // cycles for specific modules
         public List<Cycle> fillCartJobs { get; private set; }
@@ -41,6 +47,9 @@ namespace BleedingSteel
 
         // storage for all jobs
         public List<Job> jobList { get; private set;}
+        public List<Cycle> McToHomeJobs { get; private set; }
+        public Trigger fillDcuTrigger { get; private set; }
+        public List<Cycle> fillDcuJobs { get; private set; }
 
         public CycleBuilder(List<TimeSample> timeSampleList)
         {
@@ -71,12 +80,25 @@ namespace BleedingSteel
             // build a trigger for checking when handler is down
             handlerdowntrigger = new Trigger("handlerDownTrigger");
             handlerdowntrigger.addCondition(new TriggerCondition("H1VertAxis", double.MinValue, 5));
+            handlerdowntrigger.addCondition(new TriggerCondition("H1AngleAxis", 65, double.MaxValue));
+            handlerdowntrigger.addCondition(new TriggerCondition("H1AngleAxis", double.MinValue,75));
             TriggerStack.Add(handlerdowntrigger);
 
             // build a trigger for checking when applicator is in materialchange position
             materialchangetrigger = new Trigger("materialchangepos");
             materialchangetrigger.addCondition(new TriggerCondition("MtrlChangePos", 1,double.MaxValue));
             TriggerStack.Add(materialchangetrigger);
+
+            // homepos
+            homepostrigger = new Trigger("homepos");
+            homepostrigger.addCondition(new TriggerCondition("HomePos", 1, double.MaxValue));
+            TriggerStack.Add(homepostrigger);
+
+            // firsthomepos
+            Firsthomepostrigger = new Trigger("firsthomepos");
+            Firsthomepostrigger.addCondition(new TriggerCondition("HomePos", 1, double.MaxValue));
+            Firsthomepostrigger.addCondition(new TriggerCondition("H1AngleAxis", double.MinValue, 16));
+            TriggerStack.Add(Firsthomepostrigger);
 
             // length of fillifs
             fillIfsTrigger = new Trigger("fillIfsTrigger");
@@ -98,6 +120,11 @@ namespace BleedingSteel
             ftCleanTrigger.addCondition(new TriggerCondition("Debug_ftclean", 1, double.MaxValue));
             TriggerStack.Add(ftCleanTrigger);
 
+            // length of filldcu
+            fillDcuTrigger = new Trigger("fillDcuTrigger");
+            fillDcuTrigger.addCondition(new TriggerCondition("Debug_filldcu", 1, double.MaxValue));
+            TriggerStack.Add(fillDcuTrigger);
+
 
             // check all triggers
             foreach (var timesample in timeSampleList) {
@@ -118,6 +145,11 @@ namespace BleedingSteel
             secondJobList = buildCyclesToDelivery(clncartToDeliveryTrigger, deliverytrigger,timeSampleList);
             thirdJobList = buildCyclesToDelivery(fillcarttrigger, deliverytrigger,timeSampleList);
 
+            GetCartJobs = buildCustomCycles(materialchangetrigger.HighFlankList, handlerdowntrigger.HighFlankList, timeSampleList, "getcart");
+            PlaceCartJobs = buildCustomCycles(ftCleanTrigger.LowFlankList, deliverytrigger.HighFlankList, timeSampleList,"placecart");
+            homeToMcJobs = buildCustomCycles(Firsthomepostrigger.LowFlankList, materialchangetrigger.HighFlankList, timeSampleList, "homeToMc");
+            McToHomeJobs = buildCustomCycles(materialchangetrigger.LowFlankList, homepostrigger.HighFlankList, timeSampleList, "McToHome");
+
             clnIfsJobs = buildCycles(clnifsToDeliveryTrigger, timeSampleList);
             clnCartJobs = buildCycles(clncartToDeliveryTrigger, timeSampleList);
             fillCartJobs = buildCycles(fillcarttrigger, timeSampleList);
@@ -125,10 +157,12 @@ namespace BleedingSteel
             fillGateJobs = buildCycles(fillGateTrigger, timeSampleList);
             flushGateJobs = buildCycles(flushGateTrigger, timeSampleList);
             ftCleanJobs = buildCycles(ftCleanTrigger, timeSampleList);
+            fillDcuJobs = buildCycles(fillDcuTrigger, timeSampleList);
 
             handlerOutJobs = buildCycles(deliverytrigger, timeSampleList);
             handlerDownJobs = buildCycles(handlerdowntrigger, timeSampleList);
             materialChangeJobs = buildCycles(materialchangetrigger, timeSampleList);
+            homeposJobs = buildCycles(homepostrigger, timeSampleList);
 
             // [first job] from start of clnifs to ready for delivery
             Job firstjob = new Job("FirstJob", firstJobList);
@@ -175,17 +209,69 @@ namespace BleedingSteel
             Job handleroutjob = new Job("handlerout", handlerOutJobs);
             jobList.Add(handleroutjob);
 
-            Job handlerdownjob = new Job("handlerdown", handlerDownJobs);
+            Job handlerdownjob = new Job("handleronfillingcart", handlerDownJobs);
             jobList.Add(handlerdownjob);
+
+            Job placecart = new Job("presentcart", PlaceCartJobs);
+            jobList.Add(placecart);
+
+            Job filldcujob = new Job("filldcu", fillDcuJobs);
+            jobList.Add(filldcujob);
+
+            Job hometomcjob = new Job("homeToMc", homeToMcJobs);
+            jobList.Add(hometomcjob);
 
             Job materialchangejob = new Job("materialchangepos", materialChangeJobs);
             jobList.Add(materialchangejob);
 
+            Job mctohomejob = new Job("McTohome", McToHomeJobs);
+            jobList.Add(mctohomejob);
+
+            Job homeposjob = new Job("homepos", homeposJobs);
+            jobList.Add(homeposjob);
+
+            Job getcartjob = new Job("getcart", GetCartJobs);
+            jobList.Add(getcartjob);
 
             foreach (var job in jobList) {
                 job.purgeObsoleteSignals();
             }
 
+        }
+
+        private List<Cycle> buildCustomCycles(List<TimeSample> highFlankList1, List<TimeSample> highFlankList2, List<TimeSample> timeSampleList,string name)
+        {
+            List<Cycle> returnlist = new List<Cycle>();
+
+            foreach (var triggtime in highFlankList1)
+            {
+                TimeSpan cyclestartstamp = triggtime.timespanStamp;
+
+                foreach (var deliverystamp in highFlankList2)
+                {
+                    if (cyclestartstamp.CompareTo(deliverystamp.timespanStamp) < 0)
+                    {
+                        var cycleendstamp = deliverystamp.timespanStamp;
+                        List<TimeSample> samplerange = new List<TimeSample>();
+
+                        foreach (var sample in timeSampleList)
+                        {
+                            if ((sample.timespanStamp.CompareTo(cyclestartstamp) > 0) && (sample.timespanStamp.CompareTo(cycleendstamp) < 0))
+                            {
+                                samplerange.Add(sample);
+                            }
+                        }
+                        returnlist.Add(new Cycle(cyclestartstamp, cycleendstamp, name, samplerange));
+                        break;
+                    }
+                }
+            }
+            foreach (var cycles in returnlist)
+            {
+                Console.WriteLine(cycles);
+            }
+
+            return returnlist;
         }
 
         private List<Cycle> buildCycles(Trigger intrigger, List<TimeSample> timeSampleList)
